@@ -5,7 +5,7 @@
 import openpylivox as opl
 
 # Open the LVX file
-filepath = "2024-11-14 18-22-35 left then right.lvx"
+filepath = "../Test1-2R.lvx"
 with opl.open_lvx_file(filepath) as f:
 
     # Iterate over frames
