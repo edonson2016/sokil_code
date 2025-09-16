@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from typing import Tuple, List, BinaryIO
 from collections.abc import Iterable, Iterator
 
+import os
+import pandas as pd
 
 class LvxParseError(Exception):
     """An error during reading / writing of a .lvx file."""
@@ -510,6 +512,9 @@ class LvxTripleExtendCartesian(LvxPoint):
                            self.reflectivity3,
                            self.tag3)
         fp.write(data)
+    #TODO: Make to_json for all Avia compatible data types
+    def to_json(self):
+
 
     @classmethod
     def read_from(cls, fp: BinaryIO) -> LvxTripleExtendCartesian:
@@ -781,8 +786,8 @@ class LvxFrame:
                 fp.seek(f.header.next_offset-fp.tell(), 1)    
                 
         fp.seek(f.header.next_offset-fp.tell(), 1)  
-        print("Real Next offset: ", f.header.next_offset)
-        print("Curr Tell", fp.tell())
+        #print("Real Next offset: ", f.header.next_offset)
+        #print("Curr Tell", fp.tell())
         assert(f.header.next_offset == fp.tell())
         return f
 
@@ -823,6 +828,22 @@ class LvxFileReader(Iterable):
         """Get an iterator over all frames."""
         return LvxFrameIter(self.fp)
 
+    @classmethod
+    def make_csv(cls, fp: BinaryIO, s_dir: str, save_file: str, iterator: LvxFileReader):
+        """Takes .lvx file path and saves relevant data in CSV"""
+
+        if not os.path.isdir(s_dir):
+            os.mkdir(s_dir)
+
+        data_type_set = set()
+        
+        for frame in iterator:
+            for pack in frame.packages:
+                if pack.data_type == 7:
+                    for point in pack.points:
+
+                elif pack.data_type == 6:
+                    for point in pack.points:
 
 class LvxFileWriter:
     """Handles writing a .lvx file."""

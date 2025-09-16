@@ -16,9 +16,10 @@ INPUT = "/home/edonson/sokil_code/2025-09-08 11-05-53.lvx"
 
 with open(INPUT, 'rb') as fi, open(INPUT + '.other', 'wb') as fo:
     lvx_in = LvxFileReader(fi)
-    header = lvx_in.header
-    for it, i in enumerate(lvx_in):
-        print(i)
+    LvxFileReader.make_csv(INPUT,"hi", lvx_in)
+    # header = lvx_in.header
+    # for it, i in enumerate(lvx_in):
+    #     print(i)
         #print(i.packages)
 
         
