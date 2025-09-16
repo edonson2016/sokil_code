@@ -514,7 +514,8 @@ class LvxTripleExtendCartesian(LvxPoint):
         fp.write(data)
     #TODO: Make to_json for all Avia compatible data types
     def to_json(self):
-
+        return {"x1": self.x1,
+                 }
 
     @classmethod
     def read_from(cls, fp: BinaryIO) -> LvxTripleExtendCartesian:
