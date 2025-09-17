@@ -451,6 +451,15 @@ class LvxImuPoint(LvxPoint):
                            self.acc_z)
         fp.write(data)
 
+    def to_json(self):
+        return {"gyro_x": self.gyro_x,
+                "gyro_y": self.gyro_y,
+                "gyro_z": self.gyro_z,
+                "acc_x": self.acc_x,
+                "acc_y": self.acc_y,
+                "acc_z": self.acc_z
+                 }
+
     @classmethod
     def read_from(cls, fp: BinaryIO) -> LvxImuPoint:
         """Read the structure from a binary file."""
@@ -512,9 +521,23 @@ class LvxTripleExtendCartesian(LvxPoint):
                            self.reflectivity3,
                            self.tag3)
         fp.write(data)
-    #TODO: Make to_json for all Avia compatible data types
+
     def to_json(self):
         return {"x1": self.x1,
+                "y1": self.y1,
+                "z1": self.z1,
+                "reflectivity1": self.reflectivity1,
+                "tag1": self.tag1,
+                "x2": self.x2,
+                "y2": self.y2,
+                "z2": self.z2,
+                "reflectivity1": self.reflectivity2,
+                "tag2": self.tag2,
+                "x3": self.x3,
+                "y3": self.y3,
+                "z3": self.z3,
+                "reflectivity3": self.reflectivity3,
+                "tag3": self.tag3
                  }
 
     @classmethod
@@ -830,22 +853,37 @@ class LvxFileReader(Iterable):
         return LvxFrameIter(self.fp)
 
     @classmethod
-    def make_csv(cls, fp: BinaryIO, s_dir: str, save_file: str, iterator: LvxFileReader):
+    def make_csv(cls, fp: BinaryIO, s_dir: str, save_file: str, iterator: LvxFileReader, max_iter: int):
         """Takes .lvx file path and saves relevant data in CSV"""
 
         if not os.path.isdir(s_dir):
             os.mkdir(s_dir)
 
-        data_type_set = set()
+        #TODO: Handle more than 6,7 datatypes
+        #data_type_set = set()
         
-        for frame in iterator:
+        df_array = {
+            "6": pd.DataFrame(columns=["x1", "y1", "z1", "reflectivity1", "tag1", "x2", "y2", "z2", "reflectivity2", "tag2", "x3", "y3", "z3", "reflectivity3", "tag3"]),
+            "7": pd.DataFrame(columns=["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"])
+        }
+
+        for i, frame in enumerate(iterator):
+            print(i)
+            if i >= max_iter:
+                break
             for pack in frame.packages:
                 if pack.data_type == 7:
                     for point in pack.points:
-
+                        row_json = point.to_json()
+                        df_array['6'].loc[len(df_array['6'])] = row_json
                 elif pack.data_type == 6:
                     for point in pack.points:
-
+                        row_json = point.to_json()
+                        df_array['7'].loc[len(df_array['7'])] = row_json
+        
+        for key in df_array:
+            df_array[key].to_csv(s_dir+ "/" + save_file + key)
+        
 class LvxFileWriter:
     """Handles writing a .lvx file."""
 
