@@ -499,7 +499,7 @@ class LvxTripleExtendCartesian(LvxPoint):
     reflectivity3: int = 0
     tag3: int = 0
 
-    struct = Struct('=3I 2B 3I 2B 3I 2B')
+    struct = Struct('=3i 2B 3i 2B 3i 2B')
 
     def write_to(self, fp: BinaryIO):
         """Write the structure to a binary file."""
@@ -531,7 +531,7 @@ class LvxTripleExtendCartesian(LvxPoint):
                 "x2": self.x2,
                 "y2": self.y2,
                 "z2": self.z2,
-                "reflectivity1": self.reflectivity2,
+                "reflectivity2": self.reflectivity2,
                 "tag2": self.tag2,
                 "x3": self.x3,
                 "y3": self.y3,
@@ -853,7 +853,7 @@ class LvxFileReader(Iterable):
         return LvxFrameIter(self.fp)
 
     @classmethod
-    def make_csv(cls, fp: BinaryIO, s_dir: str, save_file: str, iterator: LvxFileReader, max_iter: int):
+    def make_csv(cls, fp: BinaryIO, s_dir: str, save_file: str, iterator: LvxFileReader, start_frame: int, end_frame: int):
         """Takes .lvx file path and saves relevant data in CSV"""
 
         if not os.path.isdir(s_dir):
@@ -863,26 +863,30 @@ class LvxFileReader(Iterable):
         #data_type_set = set()
         
         df_array = {
-            "6": pd.DataFrame(columns=["x1", "y1", "z1", "reflectivity1", "tag1", "x2", "y2", "z2", "reflectivity2", "tag2", "x3", "y3", "z3", "reflectivity3", "tag3"]),
-            "7": pd.DataFrame(columns=["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"])
+            "7": pd.DataFrame(columns=["x1", "y1", "z1", "reflectivity1", "tag1", "x2", "y2", "z2", "reflectivity2", "tag2", "x3", "y3", "z3", "reflectivity3", "tag3"]),
+            "6": pd.DataFrame(columns=["gyro_x", "gyro_y", "gyro_z", "acc_x", "acc_y", "acc_z"])
         }
 
         for i, frame in enumerate(iterator):
-            print(i)
-            if i >= max_iter:
-                break
-            for pack in frame.packages:
-                if pack.data_type == 7:
-                    for point in pack.points:
-                        row_json = point.to_json()
-                        df_array['6'].loc[len(df_array['6'])] = row_json
-                elif pack.data_type == 6:
-                    for point in pack.points:
-                        row_json = point.to_json()
-                        df_array['7'].loc[len(df_array['7'])] = row_json
+            if i < start_frame:
+                print(i)
+            else:
+                print(i)
+                if i >= end_frame:
+                    break
+                for pack in frame.packages:
+                    print(int.from_bytes(pack.timestamp, "little"))
+                    if pack.data_type == 6:
+                        for point in pack.points:
+                            row_json = point.to_json()
+                            df_array['6'].loc[len(df_array['6'])] = row_json
+                    elif pack.data_type == 7:
+                        for point in pack.points:
+                            row_json = point.to_json()
+                            df_array['7'].loc[len(df_array['7'])] = row_json
         
         for key in df_array:
-            df_array[key].to_csv(s_dir+ "/" + save_file + key)
+            df_array[key].to_csv(s_dir+ "/" + key + save_file)
         
 class LvxFileWriter:
     """Handles writing a .lvx file."""

@@ -3,7 +3,7 @@ import os
 INPUT = "/home/edonson/sokil_code/2025-09-08 11-05-53.lvx"
 
 #59496298 to 59661486
-from struct import Struct
+import struct
 
 
 
@@ -43,10 +43,29 @@ with open(INPUT, mode='rb') as f: # b is important -> binary
     extrinsicEnable = f.read(1)
     print("Extrinsic Enable: ", extrinsicEnable)
 
-    extrinsicData = f.read(24)
-    print("Extrinsic Data: ", extrinsicData)
+    pitch = f.read(4)
+    pitch = struct.unpack("<f", pitch)
+    print("Pitch: ", pitch)
 
-    x = f.read(59661510-88)
+    roll = f.read(4)
+    roll = struct.unpack("<f", roll)
+    print("roll: ", roll)
+
+    yaw = f.read(4)
+    yaw = struct.unpack("<f", yaw)
+    print("yaw: ", yaw)
+
+    x = f.read(4)
+    x = struct.unpack("<f", x)
+    print("x: ", x)
+    y = f.read(4)
+    y = struct.unpack("<f", y)
+    print("y: ", y)
+    z = f.read(4)
+    z = struct.unpack("<f", z)
+    print("z: ", z)
+
+    #x = f.read(59661510-88)
 
     #point cloud (frame header)
     currentOffset = f.read(8)
@@ -85,10 +104,26 @@ with open(INPUT, mode='rb') as f: # b is important -> binary
     print("data type: ", dataType)
 
     timeStamp = f.read(8)
+    timeStamp = int.from_bytes(timeStamp, "little")
     print("time stamp:", timeStamp)
 
-    rawdata = f.read(42*30)
-    print("raw: ", rawdata)
+    firstX = f.read(4)
+    firstX = struct.unpack("<f", firstX)
+    print("First X: ", firstX)
+
+    firstY = f.read(4)
+    firstY = struct.unpack("<f", firstY)
+    print("First Y: ", firstY)
+
+    firstZ = f.read(4)
+    firstZ = struct.unpack("<f", firstZ)
+    print("First Z: ", firstZ)
+
+    reflec = f.read(1)
+    print("reflec: ", reflec)
+    
+    #rawdata = f.read(42*30)
+    #print("raw: ", rawdata)
     
     deviceIndex = f.read(1)
     print("device index: ", deviceIndex)
