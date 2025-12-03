@@ -6,10 +6,19 @@ from extract_reflec import read_pcd_with_reflectivity
 from rotate import rotate
 from density import heat_map
 
+def parse_args():
+    '''PARAMETERS'''
+    parser = argparse.ArgumentParser('Surface Detection')
+    parser.add_argument('--filename', type=str, help='Rel File path to point cloud')
+    parser.add_argument('--HEATMAP', type=bool, default=True, help='Run Heatmap analysis or curvature analysis')
+    parser.add_argument('--VIS', type=bool, default=False, help='Run visualizations in addition to analysis')
+    return parser.parse_args()
+
 # Starting parameters...
-filename = "1_landmine.pcd"
-HEATMAP = True
-VIS = False
+args = parse_args()
+filename = args.filename
+HEATMAP = args.HEATMAP
+VIS = args.VIS
 
 pcd_raw = o3d.io.read_point_cloud(filename)
 pcd_raw = rotate(pcd_raw)
