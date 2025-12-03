@@ -1,4 +1,6 @@
 *.lvx
 *.csv
 *.other
+*.pcd
 sokil/
+obj_dect/generate_training_data.py

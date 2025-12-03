@@ -908,5 +908,3 @@ class LvxFileWriter:
             header.next_offset = curr + diff
 
         frame.write_to(self.fp)
-test = LvxImuPoint()
-print(test.size)
