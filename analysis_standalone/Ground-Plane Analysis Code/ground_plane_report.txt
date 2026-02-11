@@ -1,0 +1,107 @@
+Ground Plane Analysis Report
+========================================
+
+Input: /Users/carletonimbentium/Desktop/Clinic code/analysis_standalone/Full Pointclouds/Feb 3 Hixon/world_pointcloud.csv
+Points loaded: 15,441,371
+
+Ground Plane Detection (RANSAC)
+  Normal vector: [-0.074701, 0.020943, 0.996986]
+  Plane equation: -0.074701*x + 0.020943*y + 0.996986*z + 5.479175 = 0
+  d: 5.479175
+  Inlier count: 1,158,565 (7.5%)
+  Inlier threshold: 0.02 m
+  RANSAC iterations: 1000
+  Max tilt constraint: 20.0°
+
+Rotation
+  Rotation angle: 4.450°
+  Rotation axis: [0.269951, 0.962874, -0.000000]
+  Z offset (ground shift to z=0): -5.4823
+
+Heatmap Configuration
+  Slice thickness: 0.02 m
+  Z range: -0.5 to 1.0 m
+  X bounds: [3.8, 6.3]
+  Y bounds: [-7.0, -4.0]
+  Bin size: 1.5 cm
+
+Slice Summary
+  Total slices: 75
+  Generated: 74
+  Skipped (< 10 points): 1
+
+  z=[-0.50, -0.48):          4 points  [SKIPPED]
+  z=[-0.48, -0.46):         11 points  [OK]
+  z=[-0.46, -0.44):         32 points  [OK]
+  z=[-0.44, -0.42):         56 points  [OK]
+  z=[-0.42, -0.40):         68 points  [OK]
+  z=[-0.40, -0.38):         69 points  [OK]
+  z=[-0.38, -0.36):         63 points  [OK]
+  z=[-0.36, -0.34):         99 points  [OK]
+  z=[-0.34, -0.32):        156 points  [OK]
+  z=[-0.32, -0.30):        146 points  [OK]
+  z=[-0.30, -0.28):        231 points  [OK]
+  z=[-0.28, -0.26):        183 points  [OK]
+  z=[-0.26, -0.24):        211 points  [OK]
+  z=[-0.24, -0.22):        241 points  [OK]
+  z=[-0.22, -0.20):        329 points  [OK]
+  z=[-0.20, -0.18):        480 points  [OK]
+  z=[-0.18, -0.16):        917 points  [OK]
+  z=[-0.16, -0.14):      1,156 points  [OK]
+  z=[-0.14, -0.12):      2,018 points  [OK]
+  z=[-0.12, -0.10):      3,047 points  [OK]
+  z=[-0.10, -0.08):      5,627 points  [OK]
+  z=[-0.08, -0.06):      9,674 points  [OK]
+  z=[-0.06, -0.04):     17,469 points  [OK]
+  z=[-0.04, -0.02):     13,859 points  [OK]
+  z=[-0.02, +0.00):      8,419 points  [OK]
+  z=[+0.00, +0.02):      6,974 points  [OK]
+  z=[+0.02, +0.04):      5,060 points  [OK]
+  z=[+0.04, +0.06):      3,875 points  [OK]
+  z=[+0.06, +0.08):      3,310 points  [OK]
+  z=[+0.08, +0.10):      2,744 points  [OK]
+  z=[+0.10, +0.12):      1,913 points  [OK]
+  z=[+0.12, +0.14):      1,619 points  [OK]
+  z=[+0.14, +0.16):      1,519 points  [OK]
+  z=[+0.16, +0.18):      1,788 points  [OK]
+  z=[+0.18, +0.20):      2,091 points  [OK]
+  z=[+0.20, +0.22):      2,325 points  [OK]
+  z=[+0.22, +0.24):      2,614 points  [OK]
+  z=[+0.24, +0.26):      3,038 points  [OK]
+  z=[+0.26, +0.28):      3,000 points  [OK]
+  z=[+0.28, +0.30):      3,215 points  [OK]
+  z=[+0.30, +0.32):      3,741 points  [OK]
+  z=[+0.32, +0.34):      4,767 points  [OK]
+  z=[+0.34, +0.36):      6,127 points  [OK]
+  z=[+0.36, +0.38):      8,718 points  [OK]
+  z=[+0.38, +0.40):     13,559 points  [OK]
+  z=[+0.40, +0.42):     21,426 points  [OK]
+  z=[+0.42, +0.44):     35,760 points  [OK]
+  z=[+0.44, +0.46):     31,989 points  [OK]
+  z=[+0.46, +0.48):     19,723 points  [OK]
+  z=[+0.48, +0.50):     13,720 points  [OK]
+  z=[+0.50, +0.52):     11,204 points  [OK]
+  z=[+0.52, +0.54):      8,614 points  [OK]
+  z=[+0.54, +0.56):      7,188 points  [OK]
+  z=[+0.56, +0.58):      6,750 points  [OK]
+  z=[+0.58, +0.60):      6,337 points  [OK]
+  z=[+0.60, +0.62):      5,967 points  [OK]
+  z=[+0.62, +0.64):      6,399 points  [OK]
+  z=[+0.64, +0.66):      6,678 points  [OK]
+  z=[+0.66, +0.68):      7,427 points  [OK]
+  z=[+0.68, +0.70):      8,454 points  [OK]
+  z=[+0.70, +0.72):      9,517 points  [OK]
+  z=[+0.72, +0.74):     11,421 points  [OK]
+  z=[+0.74, +0.76):     11,453 points  [OK]
+  z=[+0.76, +0.78):      8,813 points  [OK]
+  z=[+0.78, +0.80):      6,117 points  [OK]
+  z=[+0.80, +0.82):      4,015 points  [OK]
+  z=[+0.82, +0.84):      2,970 points  [OK]
+  z=[+0.84, +0.86):      2,184 points  [OK]
+  z=[+0.86, +0.88):      1,505 points  [OK]
+  z=[+0.88, +0.90):      1,192 points  [OK]
+  z=[+0.90, +0.92):        931 points  [OK]
+  z=[+0.92, +0.94):        787 points  [OK]
+  z=[+0.94, +0.96):        741 points  [OK]
+  z=[+0.96, +0.98):        630 points  [OK]
+  z=[+0.98, +1.00):        503 points  [OK]

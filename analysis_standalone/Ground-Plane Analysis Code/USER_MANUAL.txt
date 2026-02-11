@@ -1,0 +1,208 @@
+Ground Plane Analysis - User Manual
+====================================
+
+Overview
+--------
+This tool analyses LiDAR pointcloud data by detecting the ground plane,
+rotating the scene so the ground aligns with Z=0, and generating
+density heatmap slices at configurable heights above and below ground.
+
+It is designed for examining surface features (e.g. archaeological
+remains, terrain anomalies) by looking at thin horizontal slices
+through the pointcloud.
+
+
+Requirements
+------------
+- Python 3.9 or later
+- The packages listed in requirements.txt:
+
+    pip install -r requirements.txt
+
+  This installs: numpy, pandas, matplotlib, scipy, plotly.
+
+
+Input Format
+------------
+The input must be a CSV file with these columns (in order):
+
+    x, y, z, intensity, timestamp
+
+All values should be numeric (float). The file can have any name, but
+"world_pointcloud.csv" is the convention used by the scanning system.
+
+
+Running the Script
+------------------
+From a terminal, navigate to the folder containing the script and run:
+
+    python3 ground_plane_analysis.py
+
+The script will walk you through every parameter interactively.
+
+
+Step-by-Step Walkthrough
+------------------------
+
+1. FILE SELECTION
+
+   The script searches for CSV files in the parent directory.  It will
+   list any it finds:
+
+       [1] Full Pointclouds/Feb 3 Hixon/world_pointcloud.csv
+
+   Type the number to select, or paste a full file path.
+
+
+2. RANSAC PARAMETERS
+
+   You are prompted for ground-plane detection settings.  Press Enter
+   at each prompt to accept the default (shown in brackets):
+
+   - RANSAC iterations [1000]
+       Number of random 3-point samples to try.  Higher = slower but
+       more reliable.  1000 is usually enough.
+
+   - Inlier threshold (m) [0.02]
+       Points within this distance of the candidate plane count as
+       inliers.  2 cm is a good default for typical LiDAR resolution.
+
+   - Subsample size for RANSAC voting [1000000]
+       To speed up inlier counting, only this many points are checked
+       per iteration.  1 million is a good balance.
+
+   - Max tilt from vertical (deg) [20.0]
+       Reject any candidate plane whose normal is tilted more than
+       this many degrees from straight up [0,0,1].  Prevents the
+       algorithm from locking onto walls or ceilings.
+
+
+3. AUTO-CROP SETTINGS
+
+   - Keep percentage of points per axis [95.0]
+       Trims the outermost points on each axis.  95% keeps the dense
+       scan region and discards sparse outliers at the edges.
+
+   - PNG DPI [150]
+       Resolution of the saved heatmap PNG images.  150 is good for
+       screen viewing; use 300 for print quality.
+
+
+4. PROCESSING (automatic)
+
+   The script now runs through these steps without further input:
+
+   a. Loads the full pointcloud (may take 10-30s for large files).
+
+   b. RANSAC ground-plane detection with SVD refinement.
+      Progress is printed to the terminal.
+
+   c. Rotates the entire pointcloud so the ground plane aligns with
+      Z = 0.  The ground-plane inliers' mean Z is shifted to exactly 0.
+
+   d. Computes auto-crop bounds (percentile trimming).
+
+   e. Saves a static 3D HTML viewer of the rotated pointcloud.
+
+
+5. INTERACTIVE 3D VIEWER (browser)
+
+   A browser window opens showing a 3D scatter plot of the rotated
+   pointcloud (subsampled to 300,000 points for performance).
+
+   At the bottom of the page is a control panel with these fields:
+
+   - X min / X max    Horizontal crop bounds (pre-filled from auto-crop)
+   - Y min / Y max    Horizontal crop bounds (pre-filled from auto-crop)
+   - Z min / Z max    Height range for slices (default: -0.50 to 1.00 m)
+   - Bin size (m)     Pixel size of the heatmap grid (default: 0.015 = 1.5 cm)
+   - Slice thickness  Height of each Z-slice (default: 0.02 = 2 cm)
+
+   You can rotate and zoom the 3D view to understand the scene, then
+   adjust the crop bounds to focus on an area of interest.
+
+   Click "Go - Generate Heatmaps" to start generation.
+
+   A progress overlay appears showing how many slices have been
+   generated.  When complete, the heatmap viewer opens automatically
+   in a new browser tab.
+
+   The 3D viewer stays open.  You can adjust the bounds and click Go
+   again to generate a new set of heatmaps for a different region.
+   Each run overwrites the previous heatmap files.
+
+   Click "Done" when you are finished.  This ends the session and the
+   script exits.  You can also press Ctrl+C in the terminal.
+
+
+6. HEATMAP VIEWER (opens automatically)
+
+   The heatmap viewer is a standalone HTML file (heatmap_slices.html)
+   that opens in a new browser tab.  It shows one heatmap slice at a
+   time with these controls:
+
+   - Prev / Next buttons to step through slices
+   - A scrubber slider to jump to any slice
+   - Keyboard shortcuts:
+       Arrow Left / Up      Previous slice
+       Arrow Right / Down   Next slice
+       Space                Next slice
+       Home                 First slice
+       End                  Last slice
+
+   Each slice is labelled with its Z range and point count.
+
+   The viewer embeds all images as base64 data, so it works offline
+   and can be shared as a single file.
+
+
+Output Files
+------------
+All output is saved in the same directory as the input CSV file.
+For example, if your input is:
+
+    Full Pointclouds/Feb 3 Hixon/world_pointcloud.csv
+
+Then the outputs are:
+
+    Full Pointclouds/Feb 3 Hixon/
+        rotated_pointcloud_viewer.html   Static 3D viewer (archival)
+        heatmap_slices.html              Click-through heatmap viewer
+        ground_plane_report.txt          Summary report with all params
+        heatmaps/                        Folder of individual PNG images
+            slice_00_z_-0.50_to_-0.48.png
+            slice_01_z_-0.48_to_-0.46.png
+            ...
+
+
+Understanding the Heatmaps
+---------------------------
+Each heatmap shows a thin horizontal slice of the pointcloud.
+
+- The colour scale represents "compensated density" - the number of
+  LiDAR returns in each grid cell, multiplied by r^2 (distance from
+  scanner origin squared).  This corrects for the natural falloff of
+  point density with distance from the scanner.
+
+- Brighter/hotter colours = more points = denser surface.
+
+- The X axis runs vertically, Y axis runs horizontally.
+
+- Slices near Z=0 show the ground surface.  Slices above Z=0 show
+  objects above ground (vegetation, structures, etc.).  Slices below
+  Z=0 can reveal subsurface features if the LiDAR penetrated.
+
+
+Report File
+-----------
+The ground_plane_report.txt contains:
+
+- Input file path and total point count
+- Ground plane equation (normal vector, d, inlier count)
+- RANSAC parameters used (iterations, threshold, tilt constraint)
+- Rotation details (angle, axis, Z offset)
+- Heatmap configuration (slice thickness, Z range, X/Y bounds, bin size)
+- Per-slice summary table (Z range, point count, skipped/generated)
+
+
+
