@@ -1,0 +1,288 @@
+================================================================================
+  FAST-LIVO2 LIO STANDALONE — USER MANUAL
+================================================================================
+
+  Processes Livox LiDAR + IMU rosbag files into registered 3D point clouds
+  and an interactive HTML viewer. No ROS installation required.
+
+
+TABLE OF CONTENTS
+─────────────────
+  1. Requirements
+  2. Installation
+  3. Quick Start
+  4. Folder Setup
+  5. Command-Line Usage
+  6. Pipeline Phases
+  7. Output Files
+  8. HTML Viewer Controls
+  9. Configuration (avia.yaml)
+ 10. Troubleshooting
+
+
+================================================================================
+1. REQUIREMENTS
+================================================================================
+
+  - Python 3.9 or newer
+  - A ROS1 .bag file containing:
+      - Livox LiDAR data on /livox/lidar (CustomMsg format)
+      - IMU data on /livox/imu (sensor_msgs/Imu)
+  - ~2x the bag file size in free disk space for outputs
+
+
+================================================================================
+2. INSTALLATION
+================================================================================
+
+  1. Open a terminal and navigate to the project folder:
+
+       cd "/path/to/lio_standalone"
+
+  2. (Recommended) Create a virtual environment:
+
+       python3 -m venv venv
+       source venv/bin/activate        # macOS/Linux
+       venv\Scripts\activate            # Windows
+
+  3. Install dependencies:
+
+       pip install -r requirements.txt
+
+     This installs: numpy, scipy, numba, rosbags, tqdm, pyyaml.
+
+  4. Verify the install:
+
+       python3 -c "import numba; import rosbags; print('Ready')"
+
+  Note: The first run will be slower because Numba compiles JIT kernels.
+  Subsequent runs reuse the cached compiled code.
+
+
+================================================================================
+3. QUICK START
+================================================================================
+
+  Place your .bag file(s) inside the Scans/ folder, then run:
+
+       python3 run.py
+
+  The script will find all bag files, ask which one to process, and
+  produce a point cloud + interactive viewer in the same folder as the bag.
+
+  When done, open viewer.html in any web browser to explore the 3D result.
+
+
+================================================================================
+4. FOLDER SETUP
+================================================================================
+
+  The expected project layout:
+
+       lio_standalone/
+       ├── run.py                  Main script (run this)
+       ├── avia.yaml               Default sensor config
+       ├── requirements.txt        Python dependencies
+       ├── fast_livo2_lio/          Pipeline source code
+       ├── docs/                   Developer documentation
+       └── Scans/                  Place bag files here
+           ├── Site A/
+           │   └── scan_01.bag
+           ├── Site B/
+           │   └── scan_02.bag
+           └── ...
+
+  Bag files can be nested in any subfolder structure under Scans/.
+  The script searches recursively.
+
+
+================================================================================
+5. COMMAND-LINE USAGE
+================================================================================
+
+  INTERACTIVE MODE (recommended):
+
+       python3 run.py
+
+     Scans the Scans/ folder, lists all .bag files with sizes, and asks
+     you to choose one.
+
+  DIRECT MODE:
+
+       python3 run.py path/to/scan.bag
+
+     Processes the specified bag file directly.
+
+  OPTIONS:
+
+     --config PATH         Use a custom YAML config instead of avia.yaml
+     --output-dir PATH     Save outputs to a specific directory
+                           (default: same folder as the bag file)
+     --lid-topic TOPIC     Override the LiDAR topic (default: /livox/lidar)
+     --imu-topic TOPIC     Override the IMU topic (default: /livox/imu)
+     --max-viewer-points N Max points in the HTML viewer (default: 500000)
+     --skip-raw-scans      Skip saving per-scan CSV files
+
+  EXAMPLES:
+
+     # Process with custom output directory:
+     python3 run.py Scans/Hixon/scan.bag --output-dir results/
+
+     # Higher-detail viewer (larger HTML file):
+     python3 run.py scan.bag --max-viewer-points 2000000
+
+     # Skip per-scan CSVs to save disk space:
+     python3 run.py scan.bag --skip-raw-scans
+
+     # Use a different LiDAR topic:
+     python3 run.py scan.bag --lid-topic /velodyne_points
+
+
+================================================================================
+6. PIPELINE PHASES
+================================================================================
+
+  The pipeline runs three phases automatically:
+
+  PHASE 1 — LiDAR-Inertial Odometry
+  ──────────────────────────────────
+    - Reads all LiDAR scans and IMU data from the bag
+    - Initializes gravity from first 30 IMU readings
+    - For each scan: propagates state via IMU, undistorts points for motion,
+      downsamples, and estimates the sensor pose via iterative EKF
+    - Outputs: odometry.csv (6-DOF pose per scan), raw_scans/ (optional)
+    - This is the slowest phase; progress is shown per-scan
+
+  PHASE 2 — World Point Cloud
+  ────────────────────────────
+    - Re-reads the bag and transforms every point into a common world frame
+      using the odometry from Phase 1
+    - Each point gets its actual sampling timestamp
+    - Outputs: world_pointcloud.csv (x, y, z, intensity, timestamp)
+
+  PHASE 3 — HTML Viewer
+  ──────────────────────
+    - Downsamples the world cloud (if needed) and embeds it in a
+      self-contained HTML file using Three.js
+    - No server or internet connection needed to view (Three.js is loaded
+      from a CDN on first open, then cached by the browser)
+    - Outputs: viewer.html
+
+
+================================================================================
+7. OUTPUT FILES
+================================================================================
+
+  All outputs are saved next to the bag file (or in --output-dir):
+
+  FILE                       DESCRIPTION
+  ─────────────────────────  ───────────────────────────────────────────
+  odometry.csv               6-DOF trajectory. Each row:
+                             timestamp, tx, ty, tz, qx, qy, qz, qw
+
+  raw_scans/                 One CSV per LiDAR scan (body-frame points).
+    scan_000000.csv          Columns: x, y, z
+    scan_000001.csv          Useful for debugging individual scans.
+    ...
+
+  world_pointcloud.csv       All points in the world frame.
+                             Columns: x, y, z, intensity, timestamp
+                             timestamp = seconds from start of capture.
+
+  viewer.html                Interactive 3D viewer. Open in a browser.
+                             Self-contained (data is embedded).
+
+
+================================================================================
+8. HTML VIEWER CONTROLS
+================================================================================
+
+  MOUSE
+  ─────
+    Left-drag          Orbit (rotate around the point cloud)
+    Right-drag          Pan (slide the view sideways)
+    Scroll wheel        Zoom in/out
+
+  KEYBOARD
+  ────────
+    R                   Reset camera to default position
+
+  COLOR MODES (buttons in top-right corner)
+  ──────────────────────────────────────────
+    Time        Colors by when each point was captured. Points sampled
+                early in the scan are blue, late points are red. This is
+                the default mode. Useful for seeing the scanning path
+                and verifying temporal coverage.
+
+    Height      Colors by Z-coordinate (elevation). Blue = low, red = high.
+                Good for seeing terrain and floor/ceiling structure.
+
+    Intensity   Colors by LiDAR reflectivity (0-255). Darker = low return,
+                brighter amber = high return. Reveals surface material
+                differences (e.g., pavement vs. vegetation).
+
+    Distance    Colors by distance from the point cloud center.
+                Shows radial coverage from the scan origin.
+
+    X-axis      Colors by X-coordinate. Reveals structure along the
+                X dimension of the world frame.
+
+    Y-axis      Colors by Y-coordinate. Same idea for the Y dimension.
+
+  POINT SIZE (slider in top-right corner)
+  ────────────────────────────────────────
+    Drag the slider to make points larger or smaller.
+    Larger points fill gaps; smaller points reveal fine detail.
+
+
+================================================================================
+9. CONFIGURATION (avia.yaml)
+================================================================================
+
+  The default config is tuned for the Livox Avia LiDAR. Key parameters
+  you might want to change:
+
+  SECTION         PARAMETER           DEFAULT   DESCRIPTION
+  ──────────────  ──────────────────  ────────  ──────────────────────────
+  common          lid_topic           /livox/   LiDAR ROS topic name
+                                      lidar
+                  imu_topic           /livox/   IMU ROS topic name
+                                      imu
+
+  extrin_calib    extrinsic_T         [0.04,    LiDAR-to-IMU translation
+                                      0.02,     (meters). Measure from your
+                                      -0.03]    sensor mount.
+                  extrinsic_R         identity  LiDAR-to-IMU rotation
+                                                (9 values, row-major 3x3)
+
+  preprocess      blind               0.8       Min range filter (meters).
+                                                Points closer are removed.
+                  point_filter_num    1         Keep every Nth point.
+                                                Set to 2 or 3 to speed up
+                                                at cost of density.
+                  filter_size_surf    0.1       Voxel downsample size (m).
+                                                Larger = faster but coarser.
+
+  imu             imu_en              true      Set false for LiDAR-only
+                                                (no IMU). Much less accurate.
+                  imu_int_frame       30        IMU samples for gravity init.
+                                                Increase if init is noisy.
+                  acc_cov             0.5       Accelerometer noise. Increase
+                                                if trajectory drifts.
+                  gyr_cov             0.3       Gyroscope noise.
+
+  lio             voxel_size          0.5       Map voxel size (meters).
+                                                Smaller = more detailed map
+                                                but slower and more memory.
+                  max_layer           2         Octree depth (0-4). More
+                                                layers = finer planes.
+                  max_iterations      5         EKF iterations per scan.
+                  dept_err            0.02      LiDAR depth noise (m).
+                  beam_err            0.05      LiDAR beam divergence (deg).
+
+  To use a custom config:
+
+       python3 run.py scan.bag --config my_config.yaml
+
+
+
